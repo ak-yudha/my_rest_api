@@ -21,5 +21,12 @@ class ProjectRepository extends ServiceEntityRepository
         parent::__construct($registry, Project::class);
     }
 
-    // Add custom methods below
+    public function generateUniqueId(): int
+    {
+        do {
+            $id = random_int(100000, 999999); // Generate a 6-digit number
+        } while ($this->find($id) !== null);
+
+        return $id;
+    }
 }

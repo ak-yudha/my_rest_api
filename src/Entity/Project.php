@@ -4,12 +4,13 @@ namespace App\Entity;
 
 use App\Repository\ProjectRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\EntityManagerInterface;
 
 #[ORM\Entity(repositoryClass: ProjectRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 class Project
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
@@ -34,7 +35,36 @@ class Project
     #[ORM\Column(type: 'string', length: 6)]
     private string $creatorId;
 
-    // Getters and Setters
+    public function __construct()
+    {
+        // Initialization logic if needed
+    }
+
+    // Getters and Setters...
+
+    #[ORM\PrePersist]
+    public function generateId(): void
+    {
+        if ($this->id === null) {
+            $this->id = $this->generateUniqueId();
+        }
+    }
+
+    private function generateUniqueId(): int
+    {
+        do {
+            $id = random_int(100000, 999999); // Generate a 6-digit number
+        } while ($this->idExists($id));
+
+        return $id;
+    }
+
+    private function idExists(int $id): bool
+    {
+        // This should ideally be in a service or repository for better design
+        return (bool) $entityManager->getRepository(Project::class)->find($id);
+    }
+
     public function getId(): ?int
     {
         return $this->id;

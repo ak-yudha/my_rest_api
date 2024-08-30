@@ -31,11 +31,12 @@ class ProjectController extends AbstractController
     }
 
     #[Route('/create', name: 'project_create', methods: ['POST'])]
-    public function create(Request $request): Response
+    public function create(Request $request, ProjectRepository $projectRepository): Response
     {
         $data = json_decode($request->getContent(), true);
 
         $project = new Project();
+        $project->setId($projectRepository->generateUniqueId());
         $project->setName($data['name']);
         $project->setLocation($data['location']);
         $project->setStage($data['stage']);
