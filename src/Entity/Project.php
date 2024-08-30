@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\ProjectRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ProjectRepository::class)]
 #[ORM\HasLifecycleCallbacks]
@@ -14,15 +15,19 @@ class Project
     #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
+    #[Assert\NotBlank(message: "Name is required")]
     #[ORM\Column(type: 'string', length: 200)]
     private string $name;
 
+    #[Assert\NotBlank(message: "Location is required")]
     #[ORM\Column(type: 'string', length: 500)]
     private string $location;
 
+    #[Assert\NotBlank(message: "Stage is required")]
     #[ORM\Column(type: 'string', length: 50)]
     private string $stage;
 
+    #[Assert\NotBlank(message: "Category is required")]
     #[ORM\Column(type: 'string', length: 50)]
     private string $category;
 
@@ -32,6 +37,12 @@ class Project
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $description = null;
 
+    #[Assert\NotBlank(message: "Creator ID is required")]
+    #[Assert\Length(
+        min: 6,
+        max: 6,
+        exactMessage: "Creator ID must be exactly 6 characters"
+    )]
     #[ORM\Column(type: 'string', length: 6)]
     private string $creatorId;
 

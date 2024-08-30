@@ -4,11 +4,13 @@ namespace App\Controller;
 
 use App\Entity\Project;
 use App\Repository\ProjectRepository;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/project')]
 class ProjectController extends AbstractController
@@ -31,9 +33,29 @@ class ProjectController extends AbstractController
     }
 
     #[Route('/create', name: 'project_create', methods: ['POST'])]
-    public function create(Request $request, ProjectRepository $projectRepository): Response
+    public function create(Request $request, ProjectRepository $projectRepository, ValidatorInterface $validator): Response
     {
         $data = json_decode($request->getContent(), true);
+
+        // Validate the request data
+        if (!isset($data['name']) || !is_string($data['name'])) {
+            return $this->json(['status' => 'error', 'errors' => ['Name is required and must be a string']], Response::HTTP_BAD_REQUEST);
+        }
+        if (!isset($data['location']) || !is_string($data['location'])) {
+            return $this->json(['status' => 'error', 'errors' => ['Location is required and must be a string']], Response::HTTP_BAD_REQUEST);
+        }
+        if (!isset($data['stage']) || !is_string($data['stage'])) {
+            return $this->json(['status' => 'error', 'errors' => ['Stage is required and must be a string']], Response::HTTP_BAD_REQUEST);
+        }
+        if (!isset($data['category']) || !is_string($data['category'])) {
+            return $this->json(['status' => 'error', 'errors' => ['Category is required and must be a string']], Response::HTTP_BAD_REQUEST);
+        }
+        if (!isset($data['constructionStartDate']) || !DateTime::createFromFormat('Y-m-d', $data['constructionStartDate'])) {
+            return $this->json(['status' => 'error', 'errors' => ['Invalid date format for Construction Start Date']], Response::HTTP_BAD_REQUEST);
+        }
+        if (!isset($data['creatorId']) || !is_string($data['creatorId']) || strlen($data['creatorId']) !== 6) {
+            return $this->json(['status' => 'error', 'errors' => ['Creator ID is required and must be exactly 6 characters']], Response::HTTP_BAD_REQUEST);
+        }
 
         $project = new Project();
         $project->setId($projectRepository->generateUniqueId());
@@ -44,6 +66,17 @@ class ProjectController extends AbstractController
         $project->setConstructionStartDate(new \DateTime($data['constructionStartDate']));
         $project->setDescription($data['description'] ?? null);
         $project->setCreatorId($data['creatorId']);
+
+        $errors = $validator->validate($project);
+
+        if (count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[] = $error->getMessage();
+            }
+
+            return $this->json($errorMessages, Response::HTTP_BAD_REQUEST);
+        }
 
         $this->entityManager->persist($project);
         $this->entityManager->flush();
@@ -63,6 +96,9 @@ class ProjectController extends AbstractController
         return $this->json($project);
     }
 
+    /**
+     * @throws \Exception
+     */
     #[Route('/{id}/edit', name: 'project_edit', methods: ['PUT'])]
     public function edit(Request $request, int $id): Response
     {
