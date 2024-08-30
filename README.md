@@ -1,4 +1,4 @@
-# Project API
+# Construction Project Management System
 
 This is a simple RESTful API for Construction Project Management System
 
